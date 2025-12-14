@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24点</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .title {
+            font-size: 2.8rem;
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .counter {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #2c3e50;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .cards-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            height: 160px;
+        }
+        
+        .card {
+            width: 22%;
+            height: 160px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            position: relative;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card.selected {
+            border-color: #3498db;
+            transform: translateY(-5px);
+        }
+        
+        .card.used {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        
+        .card-value {
+            font-size: 3.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .card-suit {
+            font-size: 1.8rem;
+            margin-top: 5px;
+            color: #e74c3c;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        
+        .operator-btn {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            border: none;
+            background: #3498db;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .operator-btn:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+        
+        .operator-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .operator-btn.selected {
+            background: #2980b9;
+            transform: scale(1.1);
+            box-shadow: 0 0 0 3px #2c3e50;
+        }
+        
+        .no-solution-btn {
+            background: #e74c3c;
+        }
+        
+        .no-solution-btn:hover {
+            background: #c0392b;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .action-btn {
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: none;
+            background: #ecf0f1;
+            color: #2c3e50;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-btn:hover {
+            background: #bdc3c7;
+        }
+        
+        .calculation-display {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 80px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.3rem;
+            color: #2c3e50;
+            border: 1px solid #eaeaea;
+        }
+        
+        .message-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        .message {
+            text-align: center;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-weight: 500;
+            transition: all 0.3s;
+            opacity: 0;
+            transform: translateY(-20px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .message.success {
+            background: #d5f4e6;
+            color: #27ae60;
+            border-left: 5px solid #27ae60;
+        }
+        
+        .message.error {
+            background: #fadbd8;
+            color: #e74c3c;
+            border-left: 5px solid #e74c3c;
+        }
+        
+        .message.info {
+            background: #d6eaf8;
+            color: #3498db;
+            border-left: 5px solid #3498db;
+        }
+        
+        .dealing-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .dealing-card {
+            width: 100px;
+            height: 140px;
+            background: white;
+            border-radius: 10px;
+            position: absolute;
+            transform-origin: center;
+            border: 3px solid #3498db;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            color: #2c3e50;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 成功庆祝动画 */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999;
+            pointer-events: none;
+            display: none;
+        }
+        
+        .celebration.show {
+            display: block;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            opacity: 0;
+        }
+        
+        /* 错误红框抖动动画 */
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); border-color: #e74c3c; }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .card.error {
+            animation: errorShake 0.5s ease-in-out;
+            border-color: #e74c3c;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        }
+        
+        /* 自动演示高亮动画 - 修复版 */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
+            50% { transform: scale(1.1); box-shadow: 0 8px 25px rgba(52, 152, 219, 0.5); }
+        }
+        
+        .card.auto-highlight {
+            animation: pulse 0.8s ease-in-out infinite;
+            border-color: #3498db;
+        }
+        
+        .operator-btn.auto-highlight {
+            animation: pulse 0.8s ease-in-out infinite;
+        }
+        
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            .cards-container {
+                height: 130px;
+            }
+            
+            .card {
+                height: 130px;
+            }
+            
+            .card-value {
+                font-size: 2.5rem;
+            }
+            
+            .controls {
+                gap: 10px;
+            }
+            
+            .operator-btn {
+                width: 55px;
+                height: 55px;
+                font-size: 1.8rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-btn {
+                width: 200px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .cards-container {
+                height: 110px;
+            }
+            
+            .card {
+                height: 110px;
+            }
+            
+            .card-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="title">24点</div>
+            <div class="subtitle">使用加减乘除得出24</div>
+            <div class="counter">已解决: <span id="solved-count">0</span></div>
+        </div>
+        
+        <div class="cards-container" id="cards-container">
+            <!-- 扑克牌将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="controls">
+            <button class="operator-btn" data-operator="+">+</button>
+            <button class="operator-btn" data-operator="-">-</button>
+            <button class="operator-btn" data-operator="×">×</button>
+            <button class="operator-btn" data-operator="÷">÷</button>
+            <button class="operator-btn no-solution-btn" id="no-solution-btn">?</button>
+        </div>
+        
+        <div class="calculation-display" id="calculation-display">
+            点击牌开始计算
+        </div>
+        
+        <div class="action-buttons">
+            <button class="action-btn" id="next-btn">
+                <i class="fas fa-forward"></i> 下一题
+            </button>
+            <button class="action-btn" id="reset-btn">
+                <i class="fas fa-redo"></i> 重置
+            </button>
+            <button class="action-btn" id="solution-btn">
+                <i class="fas fa-lightbulb"></i> 答案
+            </button>
+        </div>
+    </div>
+    
+    <!-- 消息容器固定在顶部，不干扰扑克牌 -->
+    <div class="message-container" id="message-container"></div>
+    
+    <!-- 成功庆祝动画 -->
+    <div class="celebration" id="celebration"></div>
+
+    <script>
+        // 游戏状态
+        let cards = [];
+        let initialCards = [];
+        let selectedCard = null;
+        let calculationSteps = [];
+        let solvedCount = 0;
+        let currentSolution = null;
+        let gameActive = true;
+        let isAutoPlaying = false;
+        
+        // DOM元素
+        const cardsContainer = document.getElementById('cards-container');
+        const calculationDisplay = document.getElementById('calculation-display');
+        const messageContainer = document.getElementById('message-container');
+        const solvedCountEl = document.getElementById('solved-count');
+        const celebrationEl = document.getElementById('celebration');
+        
+        // 初始化游戏
+        function initGame() {
+            // 重置状态
+            selectedCard = null;
+            calculationSteps = [];
+            gameActive = true;
+            currentSolution = null;
+            isAutoPlaying = false;
+            
+            // 清空卡片容器
+            cardsContainer.innerHTML = '';
+            
+            // 生成4张随机牌
+            cards = [];
+            for (let i = 0; i < 4; i++) {
+                let value = Math.floor(Math.random() * 13) + 1;
+                cards.push({value, used: false, element: null});
+            }
+            
+            // 保存初始牌用于重置
+            initialCards = JSON.parse(JSON.stringify(cards));
+            
+            // 显示发牌动画
+            showDealAnimation();
+            
+            // 更新计算显示
+            updateCalculationDisplay();
+            
+            // 检查是否有解
+            checkSolution();
+            
+            // 清空消息
+            clearMessages();
+        }
+        
+        // 显示发牌动画
+        function showDealAnimation() {
+            // 创建发牌动画容器
+            const dealContainer = document.createElement('div');
+            dealContainer.className = 'dealing-animation';
+            document.body.appendChild(dealContainer);
+            
+            // 创建4张动画牌
+            const dealCards = [];
+            for (let i = 0; i < 4; i++) {
+                const card = document.createElement('div');
+                card.className = 'dealing-card';
+                card.textContent = getCardDisplayValue(cards[i].value);
+                card.style.left = '50%';
+                card.style.top = '50%';
+                card.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+                dealContainer.appendChild(card);
+                dealCards.push(card);
+            }
+            
+            // 发牌动画
+            setTimeout(() => {
+                // 第一张牌
+                dealCards[0].style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                dealCards[0].style.left = '12.5%';
+                dealCards[0].style.transform = 'translate(-50%, -50%) rotate(-5deg)';
+                
+                // 第二张牌
+                setTimeout(() => {
+                    dealCards[1].style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    dealCards[1].style.left = '37.5%';
+                    dealCards[1].style.transform = 'translate(-50%, -50%) rotate(-2deg)';
+                }, 150);
+                
+                // 第三张牌
+                setTimeout(() => {
+                    dealCards[2].style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    dealCards[2].style.left = '62.5%';
+                    dealCards[2].style.transform = 'translate(-50%, -50%) rotate(2deg)';
+                }, 300);
+                
+                // 第四张牌
+                setTimeout(() => {
+                    dealCards[3].style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    dealCards[3].style.left = '87.5%';
+                    dealCards[3].style.transform = 'translate(-50%, -50%) rotate(5deg)';
+                    
+                    // 动画结束后创建实际卡片
+                    setTimeout(() => {
+                        dealContainer.remove();
+                        createCards();
+                        showMessage('选择一张牌开始', 'info');
+                    }, 600);
+                }, 450);
+            }, 200);
+        }
+        
+        // 创建实际卡片
+        function createCards() {
+            cardsContainer.innerHTML = '';
+            
+            cards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = `card ${card.used ? 'used' : ''}`;
+                cardEl.dataset.index = index;
+                
+                const valueEl = document.createElement('div');
+                valueEl.className = 'card-value';
+                valueEl.textContent = getCardDisplayValue(card.value);
+                
+                // 添加花色符号
+                const suitEl = document.createElement('div');
+                suitEl.className = 'card-suit';
+                const suits = ['♥', '♦', '♣', '♠'];
+                suitEl.textContent = suits[Math.floor(Math.random() * 4)];
+                
+                cardEl.appendChild(valueEl);
+                cardEl.appendChild(suitEl);
+                
+                // 添加点击事件
+                cardEl.addEventListener('click', () => selectCard(index));
+                
+                cardsContainer.appendChild(cardEl);
+                card.element = cardEl;
+            });
+        }
+        
+        // 获取卡牌显示值
+        function getCardDisplayValue(value) {
+            switch(value) {
+                case 1: return 'A';
+                case 11: return 'J';
+                case 12: return 'Q';
+                case 13: return 'K';
+                default: return value.toString();
+            }
+        }
+        
+        // 选择卡片
+        function selectCard(index) {
+            if (!gameActive || cards[index].used || isAutoPlaying) return;
+            
+            // 如果已经选择了一张牌，则进行计算
+            if (selectedCard !== null && selectedCard !== index) {
+                // 等待运算符选择
+                showMessage('选择运算符', 'info');
+                return;
+            }
+            
+            // 如果没有选择任何牌，则选择这张牌
+            if (selectedCard === null) {
+                selectedCard = index;
+                cards[index].element.classList.add('selected');
+                showMessage('选择运算符', 'info');
+            } 
+            // 如果点击的是同一张牌，则取消选择
+            else if (selectedCard === index) {
+                selectedCard = null;
+                cards[index].element.classList.remove('selected');
+                showMessage('已取消', 'info');
+            }
+        }
+        
+        // 运算符按钮点击事件
+        document.querySelectorAll('.operator-btn[data-operator]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (selectedCard === null || isAutoPlaying) {
+                    showMessage('先选牌', 'info');
+                    return;
+                }
+                
+                const operator = btn.dataset.operator;
+                showMessage('选另一张牌', 'info');
+                
+                // 等待选择第二张牌
+                const operatorClickListener = (e) => {
+                    const cardEl = e.target.closest('.card');
+                    if (!cardEl) return;
+                    
+                    const cardIndex = parseInt(cardEl.dataset.index);
+                    
+                    // 不能选择同一张牌或已使用的牌
+                    if (cardIndex === selectedCard || cards[cardIndex].used) {
+                        return;
+                    }
+                    
+                    // 执行计算
+                    performCalculation(selectedCard, cardIndex, operator);
+                    
+                    // 移除事件监听器
+                    cardsContainer.removeEventListener('click', operatorClickListener);
+                };
+                
+                // 添加事件监听器
+                cardsContainer.addEventListener('click', operatorClickListener);
+                
+                // 5秒后自动移除监听器
+                setTimeout(() => {
+                    cardsContainer.removeEventListener('click', operatorClickListener);
+                }, 5000);
+            });
+        });
+        
+        // 执行计算
+        function performCalculation(index1, index2, operator) {
+            const card1 = cards[index1];
+            const card2 = cards[index2];
+            const value1 = card1.value;
+            const value2 = card2.value;
+            
+            let result;
+            let operationText;
+            
+            // 根据运算符进行计算
+            switch(operator) {
+                case '+':
+                    result = value1 + value2;
+                    operationText = `${getCardDisplayValue(value1)} + ${getCardDisplayValue(value2)} = ${result}`;
+                    break;
+                case '-':
+                    result = value1 - value2;
+                    if (result < 0) {
+                        showMessage('不能为负数', 'error');
+                        resetSelection();
+                        return;
+                    }
+                    operationText = `${getCardDisplayValue(value1)} - ${getCardDisplayValue(value2)} = ${result}`;
+                    break;
+                case '×':
+                    result = value1 * value2;
+                    operationText = `${getCardDisplayValue(value1)} × ${getCardDisplayValue(value2)} = ${result}`;
+                    break;
+                case '÷':
+                    // 检查是否能整除
+                    if (value2 === 0 || value1 % value2 !== 0) {
+                        showMessage('必须整除', 'error');
+                        resetSelection();
+                        return;
+                    }
+                    result = value1 / value2;
+                    operationText = `${getCardDisplayValue(value1)} ÷ ${getCardDisplayValue(value2)} = ${result}`;
+                    break;
+            }
+            
+            // 记录计算步骤
+            calculationSteps.push(operationText);
+            
+            // 更新卡片状态
+            card1.used = true;
+            card1.element.classList.add('used');
+            card1.element.classList.remove('selected');
+            
+            card2.value = result;
+            card2.element.querySelector('.card-value').textContent = result;
+            
+            // 检查游戏是否结束
+            checkGameEnd();
+            
+            // 重置选择
+            selectedCard = null;
+            
+            // 更新计算显示
+            updateCalculationDisplay();
+            
+            // 显示计算成功消息
+            showMessage(`计算成功`, 'success');
+        }
+        
+        // 检查游戏是否结束
+        function checkGameEnd() {
+            // 统计未使用的卡片
+            const remainingCards = cards.filter(card => !card.used);
+            
+            // 如果只剩下一张牌
+            if (remainingCards.length === 1) {
+                const lastCard = remainingCards[0];
+                
+                // 如果最后一张牌的值是24，游戏胜利
+                if (lastCard.value === 24) {
+                    gameActive = false;
+                    solvedCount++;
+                    solvedCountEl.textContent = solvedCount;
+                    
+                    // 显示庆祝动画
+                    showCelebration();
+                    
+                    // 显示成功消息
+                    showMessage('太棒了！计算正确！', 'success');
+                    
+                    // 2秒后自动下一题
+                    setTimeout(() => {
+                        initGame();
+                    }, 2000);
+                } else {
+                    // 否则游戏失败
+                    showMessage(`最终结果是 ${lastCard.value}，不是24`, 'error');
+                    
+                    // 给最后一张牌添加错误动画
+                    const lastCardEl = lastCard.element;
+                    lastCardEl.classList.add('error');
+                    
+                    // 2秒后自动恢复原状
+                    setTimeout(() => {
+                        resetCalculation();
+                    }, 2000);
+                }
+            }
+        }
+        
+        // 显示庆祝动画
+        function showCelebration() {
+            // 清空庆祝容器
+            celebrationEl.innerHTML = '';
+            celebrationEl.classList.add('show');
+            
+            // 创建彩纸片
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.opacity = '0';
+                
+                // 随机动画参数
+                const duration = Math.random() * 3 + 2;
+                const delay = Math.random() * 1;
+                
+                // 应用动画
+                confetti.style.animation = `
+                    confettiFall ${duration}s ease-out ${delay}s forwards,
+                    confettiOpacity ${duration}s ease-out ${delay}s forwards
+                `;
+                
+                // 创建关键帧
+                const keyframes = `
+                    @keyframes confettiFall {
+                        0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+                        100% { transform: translateY(100vh) rotate(${Math.random() * 360}deg); opacity: 0; }
+                    }
+                    @keyframes confettiOpacity {
+                        0% { opacity: 0; }
+                        10% { opacity: 1; }
+                        90% { opacity: 1; }
+                        100% { opacity: 0; }
+                    }
+                `;
+                
+                // 添加关键帧
+                const styleSheet = document.createElement('style');
+                styleSheet.textContent = keyframes;
+                document.head.appendChild(styleSheet);
+                
+                celebrationEl.appendChild(confetti);
+            }
+            
+            // 3秒后移除庆祝动画
+            setTimeout(() => {
+                celebrationEl.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 重置选择
+        function resetSelection() {
+            if (selectedCard !== null) {
+                cards[selectedCard].element.classList.remove('selected');
+                selectedCard = null;
+            }
+        }
+        
+        // 更新计算显示
+        function updateCalculationDisplay() {
+            if (calculationSteps.length === 0) {
+                calculationDisplay.textContent = '点击牌开始计算';
+                calculationDisplay.style.color = '#aaa';
+            } else {
+                calculationDisplay.textContent = calculationSteps[calculationSteps.length - 1];
+                calculationDisplay.style.color = '#2c3e50';
+            }
+        }
+        
+        // 显示消息
+        function showMessage(text, type = 'info') {
+            // 清空消息容器
+            clearMessages();
+            
+            // 创建消息元素
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = text;
+            
+            // 添加到消息容器
+            messageContainer.appendChild(messageEl);
+            
+            // 显示消息
+            setTimeout(() => {
+                messageEl.classList.add('show');
+            }, 10);
+            
+            // 3秒后隐藏消息
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+                setTimeout(() => {
+                    if (messageEl.parentNode === messageContainer) {
+                        messageContainer.removeChild(messageEl);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // 清空所有消息
+        function clearMessages() {
+            messageContainer.innerHTML = '';
+        }
+        
+        // 检查是否有解 - 修复版算法
+        function checkSolution() {
+            const values = cards.map(card => card.value);
+            currentSolution = find24Solution(values);
+        }
+        
+        // 优化版24点求解算法
+        function find24Solution(nums) {
+            // 深度优先搜索所有可能的解法
+            const solutions = [];
+            
+            function dfs(numbers, steps) {
+                if (numbers.length === 1) {
+                    if (Math.abs(numbers[0] - 24) < 0.001) {
+                        solutions.push([...steps]);
+                    }
+                    return;
+                }
+                
+                for (let i = 0; i < numbers.length; i++) {
+                    for (let j = i + 1; j < numbers.length; j++) {
+                        const remaining = [];
+                        for (let k = 0; k < numbers.length; k++) {
+                            if (k !== i && k !== j) remaining.push(numbers[k]);
+                        }
+                        
+                        const a = numbers[i];
+                        const b = numbers[j];
+                        
+                        // 尝试所有可能的运算
+                        const operations = [
+                            {op: '+', result: a + b, text: `${getCardDisplayValue(a)} + ${getCardDisplayValue(b)} = ${a + b}`},
+                            {op: '-', result: a - b, text: `${getCardDisplayValue(a)} - ${getCardDisplayValue(b)} = ${a - b}`},
+                            {op: '-', result: b - a, text: `${getCardDisplayValue(b)} - ${getCardDisplayValue(a)} = ${b - a}`},
+                            {op: '×', result: a * b, text: `${getCardDisplayValue(a)} × ${getCardDisplayValue(b)} = ${a * b}`},
+                            {op: '÷', result: a / b, text: `${getCardDisplayValue(a)} ÷ ${getCardDisplayValue(b)} = ${a / b}`},
+                            {op: '÷', result: b / a, text: `${getCardDisplayValue(b)} ÷ ${getCardDisplayValue(a)} = ${b / a}`},
+                        ];
+                        
+                        // 过滤掉无效的运算（负数、非整数除法）
+                        const validOperations = operations.filter(op => {
+                            if (op.result < 0) return false;
+                            if (op.op === '÷' && !Number.isInteger(op.result)) return false;
+                            return true;
+                        });
+                        
+                        // 重新排序运算，优先选择更符合人算思路的
+                        validOperations.sort((op1, op2) => {
+                            // 优先选择产生较小结果的运算（更接近1-12之间的数）
+                            const diff1 = Math.abs(op1.result - 12);
+                            const diff2 = Math.abs(op2.result - 12);
+                            if (diff1 !== diff2) return diff1 - diff2;
+                            
+                            // 其次优先选择减法或除法（更可能产生1这样的数）
+                            if (op1.op === '-' || op1.op === '÷') return -1;
+                            if (op2.op === '-' || op2.op === '÷') return 1;
+                            
+                            return 0;
+                        });
+                        
+                        for (const operation of validOperations) {
+                            dfs([operation.result, ...remaining], [...steps, operation.text]);
+                            if (solutions.length > 0) return;
+                        }
+                    }
+                }
+            }
+            
+            dfs(nums, []);
+            
+            // 从所有解法中选择一个最符合人算思路的
+            if (solutions.length > 0) {
+                // 优先选择步骤少的解法
+                solutions.sort((a, b) => a.length - b.length);
+                
+                // 如果步骤相同，优先选择包含减法和除法的解法（更符合人算）
+                const bestSolution = solutions[0];
+                
+                // 检查是否有包含产生1的步骤（如5-4=1）
+                const hasOneResult = bestSolution.some(step => step.includes('= 1'));
+                if (hasOneResult) return bestSolution;
+                
+                return bestSolution;
+            }
+            
+            return null;
+        }
+        
+        // 生成答案 - 修复自动演示
+        document.getElementById('solution-btn').addEventListener('click', () => {
+            if (!currentSolution) {
+                showMessage('可能无解', 'error');
+                return;
+            }
+            
+            showMessage('开始自动演示答案...', 'success');
+            isAutoPlaying = true;
+            
+            // 重置计算
+            resetCalculation();
+            
+            // 等待重置完成
+            setTimeout(() => {
+                // 开始自动演示
+                autoPlaySolution(currentSolution);
+            }, 500);
+        });
+        
+        // 自动演示答案 - 修复动画
+        function autoPlaySolution(solution) {
+            if (!solution || solution.length === 0 || !isAutoPlaying) {
+                isAutoPlaying = false;
+                showMessage('无法演示此答案', 'error');
+                return;
+            }
+            
+            // 显示所有步骤（去掉序号）
+            let solutionText = solution.join(' → ');
+            
+            calculationDisplay.textContent = solutionText;
+            calculationDisplay.style.color = '#3498db';
+            
+            // 执行自动演示步骤
+            executeAutoPlayStep(solution, 0);
+        }
+        
+        // 执行自动演示步骤 - 修复动画
+        function executeAutoPlayStep(solution, stepIndex) {
+            if (stepIndex >= solution.length || !isAutoPlaying) {
+                // 演示完成
+                isAutoPlaying = false;
+                showMessage('自动演示完成', 'success');
+                return;
+            }
+            
+            const step = solution[stepIndex];
+            
+            // 解析步骤，格式如："Q + J = 23" 或 "5 - 4 = 1"
+            const match = step.match(/(\w+) ([+\-×÷]) (\w+) = (\d+)/);
+            if (!match) {
+                // 如果解析失败，继续下一步
+                setTimeout(() => {
+                    executeAutoPlayStep(solution, stepIndex + 1);
+                }, 1500);
+                return;
+            }
+            
+            const [, num1Str, operator, num2Str, resultStr] = match;
+            
+            // 转换数字
+            const num1 = getCardValueFromDisplay(num1Str);
+            const num2 = getCardValueFromDisplay(num2Str);
+            const result = parseInt(resultStr);
+            
+            // 找到对应的牌
+            const card1Index = findCardIndex(num1);
+            const card2Index = findCardIndex(num2);
+            
+            if (card1Index === -1 || card2Index === -1 || card1Index === card2Index) {
+                // 如果找不到牌，继续下一步
+                setTimeout(() => {
+                    executeAutoPlayStep(solution, stepIndex + 1);
+                }, 1500);
+                return;
+            }
+            
+            // 步骤1: 高亮第一张牌
+            cards[card1Index].element.classList.add('auto-highlight');
+            cards[card1Index].element.classList.add('selected');
+            
+            showMessage(`选中 ${num1Str}，请选择运算符`);
+            
+            // 步骤2: 高亮运算符按钮
+            setTimeout(() => {
+                const operatorBtn = document.querySelector(`.operator-btn[data-operator="${operator}"]`);
+                if (operatorBtn) {
+                    operatorBtn.classList.add('auto-highlight');
+                    operatorBtn.classList.add('selected');
+                }
+                
+                showMessage(`选中运算符 ${operator}，请选择第二张牌`);
+                
+                // 步骤3: 高亮第二张牌
+                setTimeout(() => {
+                    cards[card2Index].element.classList.add('auto-highlight');
+                    cards[card2Index].element.classList.add('selected');
+                    
+                    showMessage(`选中 ${num2Str}，开始计算`);
+                    
+                    // 步骤4: 执行计算并更新界面
+                    setTimeout(() => {
+                        // 执行计算
+                        performCalculationForAutoPlay(card1Index, card2Index, operator, result);
+                        
+                        // 移除高亮效果
+                        cards[card1Index].element.classList.remove('auto-highlight');
+                        cards[card2Index].element.classList.remove('auto-highlight');
+                        if (operatorBtn) {
+                            operatorBtn.classList.remove('auto-highlight');
+                            operatorBtn.classList.remove('selected');
+                        }
+                        
+                        showMessage(`计算完成: ${num1Str} ${operator} ${num2Str} = ${result}`);
+                        
+                        // 继续下一步
+                        setTimeout(() => {
+                            executeAutoPlayStep(solution, stepIndex + 1);
+                        }, 1500);
+                    }, 1200);
+                }, 1000);
+            }, 1000);
+        }
+        
+        // 为自动演示执行计算
+        function performCalculationForAutoPlay(index1, index2, operator, expectedResult) {
+            const card1 = cards[index1];
+            const card2 = cards[index2];
+            
+            // 更新卡片状态
+            card1.used = true;
+            card1.element.classList.add('used');
+            card1.element.classList.remove('selected');
+            card1.element.classList.remove('auto-highlight');
+            
+            card2.value = expectedResult;
+            card2.element.querySelector('.card-value').textContent = expectedResult;
+            card2.element.classList.remove('selected');
+            
+            // 记录计算步骤
+            const operationText = `${getCardDisplayValue(card1.value)} ${operator} ${getCardDisplayValue(card2.value)} = ${expectedResult}`;
+            calculationSteps.push(operationText);
+            
+            // 更新计算显示
+            updateCalculationDisplay();
+            
+            // 重置选择
+            selectedCard = null;
+        }
+        
+        // 从显示值获取卡牌数值
+        function getCardValueFromDisplay(displayValue) {
+            switch(displayValue) {
+                case 'A': return 1;
+                case 'J': return 11;
+                case 'Q': return 12;
+                case 'K': return 13;
+                default: return parseInt(displayValue);
+            }
+        }
+        
+        // 查找卡牌索引
+        function findCardIndex(value) {
+            for (let i = 0; i < cards.length; i++) {
+                if (!cards[i].used && cards[i].value === value) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+        
+        // 重置计算 - 恢复初始扑克牌
+        function resetCalculation() {
+            // 恢复初始牌
+            cards = JSON.parse(JSON.stringify(initialCards));
+            
+            // 重新创建卡片
+            createCards();
+            
+            // 重置状态
+            selectedCard = null;
+            calculationSteps = [];
+            gameActive = true;
+            
+            // 更新显示
+            updateCalculationDisplay();
+        }
+        
+        // 下一题
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (isAutoPlaying) return;
+            initGame();
+        });
+        
+        // 重置按钮
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            if (isAutoPlaying) return;
+            resetCalculation();
+            showMessage('已重置', 'info');
+        });
+        
+        // 无解按钮
+        document.getElementById('no-solution-btn').addEventListener('click', () => {
+            if (isAutoPlaying) return;
+            
+            if (!currentSolution) {
+                showMessage('正确，无解', 'success');
+                setTimeout(() => {
+                    initGame();
+                }, 1500);
+            } else {
+                showMessage('有解，再试试', 'error');
+            }
+        });
+        
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>
